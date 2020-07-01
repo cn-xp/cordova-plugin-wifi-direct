@@ -110,6 +110,9 @@ public class WifiSocketClient {
                 mManager.switchConnectionInfo(redirectInfo);
                 mManager.connect();
                 reconnectionTime ++;
+            } else {
+                Log.i(TAG, "三次重连失败");
+                reconnectionTime = 0;
             }
         }
 
