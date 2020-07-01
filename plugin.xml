@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin 
+  xmlns="http://apache.org/cordova/ns/plugins/1.0" 
+  xmlns:android="http://schemas.android.com/apk/res/android" id="cordova-plugin-wifi-direct" version="0.1.0">
+  <name>Wifi Direct</name>
+  <description>Android wifi direct library.</description>
+  <author>Jason Yang</author>
+  <engines>
+    <engine name="cordova" version=">=5.0.0"/>
+  </engines>
+  <!-- android -->
+  <platform name="android">
+    <js-module src="www/wifi_direct.js" name="WifiDirect">
+      <clobbers target="WifiDirect" />
+    </js-module>
+    <framework src="com.tonystark.android:socket:4.1.0" />
+    <framework src="com.tonystark.android:socket-server:4.1.0" />
+    <framework src="com.google.code.gson:gson:2.8.0" />
+    <config-file target="AndroidManifest.xml" parent="/manifest">
+      <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+      <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+      <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+      <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+      <uses-permission android:name="android.permission.INTERNET" />
+      <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+      <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+      <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS" />
+      <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+    </config-file>
+    <config-file target="res/xml/config.xml" parent="/*">
+      <feature name="WifiDirect">
+        <param name="android-package" value="com.android.plugins.wifidirect.WifiDirect" />
+      </feature>
+    </config-file>
+    <source-file src="src/android/com/android/plugins/wifidirect/WifiDirect.java" target-dir="src/com/android/plugins/wifidirect"/>
+    <source-file src="src/android/com/android/plugins/wifidirect/library/Constants.java" target-dir="src/com/android/plugins/wifidirect/library/"/>
+    <source-file src="src/android/com/android/plugins/wifidirect/library/ServiceData.java" target-dir="src/com/android/plugins/wifidirect/library/"/>
+    <source-file src="src/android/com/android/plugins/wifidirect/library/WifiDirectNode.java" target-dir="src/com/android/plugins/wifidirect/library/"/>
+    <source-file src="src/android/com/android/plugins/wifidirect/library/WiFiDirectNodeReceiver.java" target-dir="src/com/android/plugins/wifidirect/library/"/>
+    <source-file src="src/android/com/android/plugins/wifidirect/library/socket/client/RedirectException.java" target-dir="src/com/android/plugins/wifidirect/library/socket/client/"/>
+    <source-file src="src/android/com/android/plugins/wifidirect/library/socket/client/WifiSocketClient.java" target-dir="src/com/android/plugins/wifidirect/library/socket/client/"/>
+    <source-file src="src/android/com/android/plugins/wifidirect/library/socket/data/ClientInfoBean.java" target-dir="src/com/android/plugins/wifidirect/library/socket/data/"/>
+    <source-file src="src/android/com/android/plugins/wifidirect/library/socket/data/DefaultSendBean.java" target-dir="src/com/android/plugins/wifidirect/library/socket/data/"/>
+    <source-file src="src/android/com/android/plugins/wifidirect/library/socket/data/FileDataBean.java" target-dir="src/com/android/plugins/wifidirect/library/socket/data/"/>
+    <source-file src="src/android/com/android/plugins/wifidirect/library/socket/data/HandShakeBean.java" target-dir="src/com/android/plugins/wifidirect/library/socket/data/"/>
+    <source-file src="src/android/com/android/plugins/wifidirect/library/socket/data/MsgDataBean.java" target-dir="src/com/android/plugins/wifidirect/library/socket/data/"/>
+    <source-file src="src/android/com/android/plugins/wifidirect/library/socket/data/OriginalWriteBean.java" target-dir="src/com/android/plugins/wifidirect/library/socket/data/"/>
+    <source-file src="src/android/com/android/plugins/wifidirect/library/socket/data/PulseBean.java" target-dir="src/com/android/plugins/wifidirect/library/socket/data/"/>
+    <source-file src="src/android/com/android/plugins/wifidirect/library/socket/data/RestartBean.java" target-dir="src/com/android/plugins/wifidirect/library/socket/data/"/>
+    <source-file src="src/android/com/android/plugins/wifidirect/library/socket/server/IServerCtrl.java" target-dir="src/com/android/plugins/wifidirect/library/socket/server/"/>
+    <source-file src="src/android/com/android/plugins/wifidirect/library/socket/server/WifiSocketServer.java" target-dir="src/com/android/plugins/wifidirect/library/socket/server/"/>
+    <source-file src="src/android/com/android/plugins/wifidirect/library/socket/server/WatchdogThread.java" target-dir="src/com/android/plugins/wifidirect/library/socket/server/"/>
+    <source-file src="src/android/com/android/plugins/wifidirect/library/socket/server/callback/ClientIOCallback.java" target-dir="src/com/android/plugins/wifidirect/library/socket/server/callback/"/>
+    <source-file src="src/android/com/android/plugins/wifidirect/library/socket/server/callback/ServerReceiver.java" target-dir="src/com/android/plugins/wifidirect/library/socket/server/callback/"/>
+    <source-file src="src/android/com/android/plugins/wifidirect/library/utils/CommonUtils.java" target-dir="src/com/android/plugins/wifidirect/library/utils/"/>
+    <source-file src="src/android/com/android/plugins/wifidirect/library/socket/data/CallbackBean.java" target-dir="src/com/android/plugins/wifidirect/library/socket/data/"/>
+  </platform>
+</plugin>
