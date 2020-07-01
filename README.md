@@ -26,7 +26,7 @@ onDeviceReady: function() {
 
 ## API介绍
 
-###方法
+### 方法
 
 startDiscovering()
 ---
@@ -85,7 +85,7 @@ wifiDirectNode.sendFileToClient(uniqueTag,fileName,dataUrl);
 ```
 
 
-###事件监听
+### 事件监听
 
 discovered
 ---
