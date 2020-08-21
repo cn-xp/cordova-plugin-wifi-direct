@@ -2,6 +2,7 @@ package com.android.plugins.wifidirect;
 
 import android.content.Context;
 import android.net.wifi.p2p.WifiP2pDevice;
+import android.net.wifi.p2p.WifiP2pManager;
 import android.util.Log;
 
 import com.android.plugins.wifidirect.library.WifiDirectNode;
@@ -14,6 +15,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by JasonYang on 2017/9/20.
@@ -91,31 +93,76 @@ public class WifiDirect extends CordovaPlugin {
             break;
             case startDiscovering: {
                 if (node != null) {
-                    node.setDiscoveringCallback(new WifiDirectNode.DiscoveringCallback() {
+//                    node.setDiscoveringCallback(new WifiDirectNode.DiscoveringCallback() {
+//                        @Override
+//                        public void onDevicesUpdate(List<WifiP2pDevice> updates) {
+//                            JSONArray status = new JSONArray();
+//                            if (updates != null && !updates.isEmpty()) {
+//                                for (WifiP2pDevice wifiP2pDevice : updates) {
+//                                    try {
+//                                        JSONObject device = new JSONObject();
+//                                        device.put(FIELD_DEVICE_NAME, wifiP2pDevice.deviceName);
+//                                        device.put(FIELD_ADDRESS, wifiP2pDevice.deviceAddress);
+////                                        device.put(FIELD_PRIMARY_TYPE, wifiP2pDevice.primaryDeviceType);
+////                                        device.put(FIELD_SECONDARY_TYPE, wifiP2pDevice.secondaryDeviceType);
+//                                        device.put(FIELD_STATUS, wifiP2pDevice.status);
+//                                        status.put(device);
+//                                    } catch (JSONException e) {
+//                                        Log.e(TAG, "Error: " + e.getMessage());
+//                                    }
+//                                }
+//                            }
+//
+//                            PluginResult result = new PluginResult(PluginResult.Status.OK, status);
+//                            result.setKeepCallback(true);
+//                            callbackContext.sendPluginResult(result);
+//                        }
+//                    });
+                    WifiP2pManager.DnsSdTxtRecordListener txtRecordListener = new WifiP2pManager.DnsSdTxtRecordListener() {
                         @Override
-                        public void onDevicesUpdate(List<WifiP2pDevice> updates) {
+                        public void onDnsSdTxtRecordAvailable(String serviceFullDomainName,
+                                                              Map<String, String> record, WifiP2pDevice device) {
+                            Log.i(TAG, "搜索到设备：" + device.toString());
                             JSONArray status = new JSONArray();
-                            if (updates != null && !updates.isEmpty()) {
-                                for (WifiP2pDevice wifiP2pDevice : updates) {
-                                    try {
-                                        JSONObject device = new JSONObject();
-                                        device.put(FIELD_DEVICE_NAME, wifiP2pDevice.deviceName);
-                                        device.put(FIELD_ADDRESS, wifiP2pDevice.deviceAddress);
+                            List<WifiP2pDevice> services = node.getServices();
+                            boolean flag = false;
+                            if (!services.isEmpty()) {
+                                for (WifiP2pDevice found : services) {
+                                    if (found.deviceName.equals(device.deviceName)) {
+                                        flag = true;
+                                        break;
+                                    }
+                                }
+                            }
+
+//                String serviceType = serviceData.getFullDomainName();
+//                if (serviceFullDomainName != null && serviceFullDomainName.equals(serviceType)) {
+                            if(!flag){
+                                services.add(device);
+                                Log.i(TAG, "设备信息：" + services.toString());
+                            }
+
+                            for (WifiP2pDevice service : services) {
+                                try {
+                                    JSONObject jsonObject = new JSONObject();
+                                    jsonObject.put(FIELD_DEVICE_NAME, service.deviceName);
+                                    jsonObject.put(FIELD_ADDRESS, service.deviceAddress);
 //                                        device.put(FIELD_PRIMARY_TYPE, wifiP2pDevice.primaryDeviceType);
 //                                        device.put(FIELD_SECONDARY_TYPE, wifiP2pDevice.secondaryDeviceType);
-                                        device.put(FIELD_STATUS, wifiP2pDevice.status);
-                                        status.put(device);
-                                    } catch (JSONException e) {
-                                        Log.e(TAG, "Error: " + e.getMessage());
-                                    }
+                                    jsonObject.put(FIELD_STATUS, service.status);
+                                    status.put(jsonObject);
+                                } catch (JSONException e) {
+                                    Log.e(TAG, "Error: " + e.getMessage());
                                 }
                             }
 
                             PluginResult result = new PluginResult(PluginResult.Status.OK, status);
                             result.setKeepCallback(true);
                             callbackContext.sendPluginResult(result);
+//                }
                         }
-                    });
+                    };
+                    node.setTxtRecordListener(txtRecordListener);
                     node.startDiscovering();
                 } else {
                     callbackContext.error("Wifi Direct has been shut down.");

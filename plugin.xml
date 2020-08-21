@@ -10,6 +10,11 @@
   </engines>
   <!-- android -->
   <platform name="android">
+    <engines>
+      <engine name="cordova" version=">=9.0.0"/>
+      <engine name="cordova-android" version=">=9.0.0" />
+    </engines>
+
     <js-module src="www/wifi_direct.js" name="WifiDirect">
       <clobbers target="WifiDirect" />
     </js-module>

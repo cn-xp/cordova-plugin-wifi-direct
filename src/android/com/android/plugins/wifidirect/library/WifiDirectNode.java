@@ -11,16 +11,17 @@ import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pGroup;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceInfo;
 import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceRequest;
 import android.os.Handler;
 import android.text.TextUtils;
 import android.util.Log;
 import com.android.plugins.wifidirect.library.socket.client.WifiSocketClient;
 import com.android.plugins.wifidirect.library.socket.server.WifiSocketServer;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -71,7 +72,7 @@ public class WifiDirectNode implements WifiP2pManager.ConnectionInfoListener,
     private BroadcastReceiver receiver;
     private IntentFilter intentFilter;
 
-//    private Runnable periodicDiscovery = null;
+    private Runnable periodicDiscovery = null;
     private Runnable periodicFind = null;
     private Runnable requestConnectionInfo = null;
 
@@ -96,6 +97,10 @@ public class WifiDirectNode implements WifiP2pManager.ConnectionInfoListener,
     private CommonCallback commonCallback;//通用回调接口
 //    private ReceivedFileCallback receivedFileCallback;//接收文件成功的回调接口
 //    private ConnectionCloseCallback connectionCloseCallback;//连接断开成功的回调接口
+
+    private WifiP2pManager.DnsSdTxtRecordListener txtRecordListener;
+
+    private WifiP2pDnsSdServiceInfo serviceInfo = null;
 
     public interface ConnectionCallback {
 
@@ -159,7 +164,7 @@ public class WifiDirectNode implements WifiP2pManager.ConnectionInfoListener,
      */
     public WifiDirectNode(final Context context/*, ServiceData serviceData*/) {
         this.context = context;
-//        this.serviceData = serviceData;
+//        this.serviceData = new ServiceData();
 
         handler = new Handler(context.getMainLooper());
 
@@ -176,52 +181,58 @@ public class WifiDirectNode implements WifiP2pManager.ConnectionInfoListener,
         channel = wifiP2pManager.initialize(context, context.getMainLooper(), null);
         receiver = new WiFiDirectNodeReceiver(this);
 
+//        Map record = new HashMap();
+//        record.put("listenport", "111");
+//        record.put("buddyname", "John Doe" + (int) (Math.random() * 1000));
+//        record.put("available", "visible");
+//
+//        serviceInfo = WifiP2pDnsSdServiceInfo.newInstance("_test","_presence",record);
         startup();
 
     }
 
     private void startup() {
-//        periodicDiscovery = new Runnable() {
+        periodicDiscovery = new Runnable() {
+            public void run() {
+                if (!isEnabled) {
+                    return;
+                }
+                Log.i(TAG, "开始搜索服务设备22222");
+                wifiP2pManager.discoverServices(channel,
+                        new WifiP2pManager.ActionListener() {
+                            public void onSuccess() {
+                            }
+
+                            public void onFailure(int reasonCode) {
+                                stopDiscovering();
+                            }
+                        });
+                handler.postDelayed(periodicDiscovery, periodicInterval);
+            }
+        };
+
+//        periodicFind = new Runnable() {
 //            public void run() {
 //                if (!isEnabled) {
 //                    return;
 //                }
 //
-//                wifiP2pManager.discoverServices(channel,
-//                        new WifiP2pManager.ActionListener() {
-//                            public void onSuccess() {
-//                            }
-//
-//                            public void onFailure(int reasonCode) {
-//                                stopDiscovering();
-//                            }
-//                        });
-//                handler.postDelayed(periodicDiscovery, periodicInterval);
+//                wifiP2pManager.discoverPeers(channel, null
+////                        new WifiP2pManager.ActionListener() {
+////                    @Override
+////                    public void onSuccess() {
+////                        Log.d(TAG, "discover success！");
+////                    }
+////
+////                    @Override
+////                    public void onFailure(int reasonCode) {
+////                        Log.d(TAG, "discover failure！");
+////                    }
+////                }
+//                );
+//                handler.postDelayed(periodicFind, periodicInterval);
 //            }
 //        };
-
-        periodicFind = new Runnable() {
-            public void run() {
-                if (!isEnabled) {
-                    return;
-                }
-
-                wifiP2pManager.discoverPeers(channel, null
-//                        new WifiP2pManager.ActionListener() {
-//                    @Override
-//                    public void onSuccess() {
-//                        Log.d(TAG, "discover success！");
-//                    }
-//
-//                    @Override
-//                    public void onFailure(int reasonCode) {
-//                        Log.d(TAG, "discover failure！");
-//                    }
-//                }
-                );
-                handler.postDelayed(periodicFind, periodicInterval);
-            }
-        };
 
         requestConnectionInfo = new Runnable() {
             public void run() {
@@ -237,32 +248,35 @@ public class WifiDirectNode implements WifiP2pManager.ConnectionInfoListener,
     }
 
     private void setupDnsSdResponsor() {
+        Log.i(TAG, "安装DNS");
         WifiP2pManager.DnsSdServiceResponseListener serviceListener = new WifiP2pManager.DnsSdServiceResponseListener() {
             @Override
             public void onDnsSdServiceAvailable(String instanceName, String serviceNameAndTP,
                     WifiP2pDevice sourceDevice) {
-                Log.d(Constants.TAG, "Found " + instanceName + " " + serviceNameAndTP);
+                Log.d(TAG, "搜索到设备2222: " + instanceName + " " + serviceNameAndTP);
             }
         };
 
-        WifiP2pManager.DnsSdTxtRecordListener txtRecordListener = new WifiP2pManager.DnsSdTxtRecordListener() {
-            @Override
-            public void onDnsSdTxtRecordAvailable(String serviceFullDomainName,
-                    Map<String, String> record, WifiP2pDevice device) {
-                if (!services.isEmpty()) {
-                    for (WifiP2pDevice found : services) {
-                        if (found.deviceName.equals(device.deviceName)) {
-                            return;
-                        }
-                    }
-                }
-
-                String serviceType = serviceData.getFullDomainName();
-                if (serviceFullDomainName != null && serviceFullDomainName.equals(serviceType)) {
-                    services.add(device);
-                }
-            }
-        };
+//        WifiP2pManager.DnsSdTxtRecordListener txtRecordListener = new WifiP2pManager.DnsSdTxtRecordListener() {
+//            @Override
+//            public void onDnsSdTxtRecordAvailable(String serviceFullDomainName,
+//                    Map<String, String> record, WifiP2pDevice device) {
+//                Log.i(TAG, "搜索到设备：" + device.toString());
+//                if (!services.isEmpty()) {
+//                    for (WifiP2pDevice found : services) {
+//                        if (found.deviceName.equals(device.deviceName)) {
+//                            return;
+//                        }
+//                    }
+//                }
+//
+////                String serviceType = serviceData.getFullDomainName();
+////                if (serviceFullDomainName != null && serviceFullDomainName.equals(serviceType)) {
+//                    services.add(device);
+//                Log.i(TAG, "设备信息：" + services.toString());
+////                }
+//            }
+//        };
 
         wifiP2pManager.setDnsSdResponseListeners(channel, serviceListener, txtRecordListener);
     }
@@ -273,26 +287,27 @@ public class WifiDirectNode implements WifiP2pManager.ConnectionInfoListener,
     public void startDiscovering() {
         if (wifiP2pManager == null) return;
         services.clear();
-//        doDiscoverServices(true);
-        doFindPeers(true);
+        setupDnsSdResponsor();
+        doDiscoverServices(true);
+//        doFindPeers(true);
     }
 
     private void doDiscoverServices(boolean start) {
-//        handler.removeCallbacks(periodicDiscovery);
+        Log.i(TAG, "开始搜索服务设备");
+        handler.removeCallbacks(periodicDiscovery);
 
         wifiP2pManager.clearServiceRequests(channel, null);
 
-        String serviceType = serviceData.getFullDomainName();
+//        String serviceType = serviceData.getFullDomainName();
         WifiP2pDnsSdServiceRequest serviceRequest;
-        if (serviceData.getName() != null && !TextUtils.isEmpty(serviceType)) {
-            serviceRequest = WifiP2pDnsSdServiceRequest
-                    .newInstance(serviceData.getName(), serviceType);
-        } else if (!TextUtils.isEmpty(serviceType)) {
-            serviceRequest = WifiP2pDnsSdServiceRequest.newInstance(serviceType);
-        } else {
+//        if (serviceData.getName() != null && !TextUtils.isEmpty(serviceType)) {
+//            serviceRequest = WifiP2pDnsSdServiceRequest
+//                    .newInstance(serviceData.getName(), serviceType);
+//        } else if (!TextUtils.isEmpty(serviceType)) {
+//            serviceRequest = WifiP2pDnsSdServiceRequest.newInstance(serviceType);
+//        } else {
             serviceRequest = WifiP2pDnsSdServiceRequest.newInstance();
-        }
-
+//        }
         wifiP2pManager.addServiceRequest(channel, serviceRequest,
                 new WifiP2pManager.ActionListener() {
                     @Override
@@ -303,8 +318,39 @@ public class WifiDirectNode implements WifiP2pManager.ConnectionInfoListener,
                     public void onFailure(int errorCode) {
                     }
                 });
+        if(serviceInfo == null){
+            Map record = new HashMap();
+            record.put("listenport", "111");
+            record.put("buddyname", "John Doe" + (int) (Math.random() * 1000));
+            record.put("available", "visible");
+
+            serviceInfo = WifiP2pDnsSdServiceInfo.newInstance("_test","_presence",record);
+        }
         if (start) {
-//            periodicDiscovery.run();
+            wifiP2pManager.addLocalService(channel, serviceInfo, new WifiP2pManager.ActionListener() {
+                @Override
+                public void onSuccess() {
+                    Log.i(TAG, "onSuccessonSuccess");
+                }
+
+                @Override
+                public void onFailure(int reason) {
+                    Log.i(TAG, "onFailureonFailure");
+                }
+            });
+            periodicDiscovery.run();
+        }else{
+            wifiP2pManager.removeLocalService(channel, serviceInfo, new WifiP2pManager.ActionListener() {
+                @Override
+                public void onSuccess() {
+                    Log.i(TAG, "onSuccess2onSuccess2");
+                }
+
+                @Override
+                public void onFailure(int reason) {
+                    Log.i(TAG, "onFailure2onFailure2");
+                }
+            });
         }
     }
 
@@ -333,8 +379,9 @@ public class WifiDirectNode implements WifiP2pManager.ConnectionInfoListener,
     public void stopDiscovering() {
         if (wifiP2pManager == null) return;
         services.clear();
-        // doDiscoverServices(false);
-        doFindPeers(false);
+        Log.i(TAG, "停止搜索设备3333");
+         doDiscoverServices(false);
+//        doFindPeers(false);
     }
 
     /**
@@ -652,7 +699,11 @@ public class WifiDirectNode implements WifiP2pManager.ConnectionInfoListener,
         this.commonCallback = commonCallback;
     }
 
-//    public void setConnectionCloseCallback(ConnectionCloseCallback callback) {
+    public void setTxtRecordListener(WifiP2pManager.DnsSdTxtRecordListener txtRecordListener) {
+        this.txtRecordListener = txtRecordListener;
+    }
+
+    //    public void setConnectionCloseCallback(ConnectionCloseCallback callback) {
 //        connectionCloseCallback = callback;
 //    }
 
@@ -722,5 +773,9 @@ public class WifiDirectNode implements WifiP2pManager.ConnectionInfoListener,
         Log.i(TAG, "服务端开始发送文件...");
         wifiSocketServer.sendFileData(uniqueTag, fileName, dataUrl);
         Log.i(TAG, "服务端发送文件成功...");
+    }
+
+    public List<WifiP2pDevice> getServices(){
+        return services;
     }
 }

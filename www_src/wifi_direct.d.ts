@@ -57,7 +57,7 @@ declare class WifiDirect {
 	/**
 	 * 创建服务器
 	 */
-	createServerReceiveFile(): void;
+	createServer(): void;
 		
 	/**
 	 * 发送文件给服务器

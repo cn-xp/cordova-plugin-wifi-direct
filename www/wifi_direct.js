@@ -122,7 +122,6 @@ function _successShutdown(result) {
 //wifi-direct接口
 var WifiDirect = /** @class */ (function () {
     function WifiDirect() {
-        exec(null, _error, 'WifiDirect', 'getInstance', []);
     }
     /**
      * 注册监听事件
@@ -148,6 +147,9 @@ var WifiDirect = /** @class */ (function () {
             functionList.push(callback);
             functionListMap[key] = functionList;
         }
+    };
+    WifiDirect.prototype.create = function () {
+        return exec(null, _error, 'WifiDirect', 'getInstance', []);
     };
     /**
      * 开始搜索设备

@@ -124,10 +124,6 @@ function _successShutdown(result) {
 //wifi-direct接口
 class WifiDirect{
 
-  constructor(){
-    exec(null, _error, 'WifiDirect', 'getInstance', []);
-  }
-
 	/**
      * 注册监听事件
      * @param key       监听事件名
@@ -151,6 +147,10 @@ class WifiDirect{
             functionList.push(callback);
             functionListMap[key] = functionList;
         }
+    }
+
+    create() {
+        return exec(null, _error, 'WifiDirect', 'getInstance', []);
     }
 
 	/**
@@ -214,6 +214,7 @@ class WifiDirect{
     sendFileToClient(uniqueTag, fileName, dataURL): void {
         return exec(_successSendFile, _error, 'WifiDirect', 'sendFileToClient', [uniqueTag, fileName, dataURL]);
     }
+
 }
 
 module.exports = WifiDirect;
